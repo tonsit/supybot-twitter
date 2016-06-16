@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2010-2015, buckket
+# Copyright (c) 2010-2016, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,114 +50,15 @@ class Twitter(callbacks.Plugin):
         self.__parent = super(Twitter, self)
         self.__parent.__init__(irc)
 
-        self.regexp = re.compile(r"(?:https?://(?:[^.]+.)?twitter.com/(?P<username>[^/]*)/status(?:es)?/)?(?P<status_id>\d+)")
+        self.regexp = re.compile(
+            r"(?:https?://(?:[^.]+.)?twitter.com/(?P<username>[^/]*)/status(?:es)?/)?(?P<status_id>\d+)")
 
-    def twitter(self, irc, msg, args):
-        """
-
-        Returns the link to the bot's the Twitter profile
-        """
-
-        irc.reply(u"http://twitter.com/{}".format(self.registryValue('botNick')))
-
-    twitter = wrap(twitter)
-
-    def _tweet(self, irc, text, tweet=None):
-        try:
-            api = self._get_twitter_api()
-            if tweet:
-                status_id = self._get_status_id(tweet)
-                if status_id:
-                    if not text.startswith('@'):
-                        username = api.get_status(status_id).user.screen_name
-                        text = "@{} {}".format(username, text)
-                    message = utils.str.ellipsisify(text, 140)
-                    status = api.update_status(status=message, in_reply_to_status_id=status_id)
-                else:
-                    irc.reply(u"Du musst mir schon einen Tweet geben, auf den sich der Unsinn beziehen soll.")
-                    return
-            else:
-                message = utils.str.ellipsisify(text, 140)
-                status = api.update_status(status=message)
-            irc.reply(u"https://twitter.com/{bot}/status/{status_id}".format(bot=self.registryValue('botNick'),
-                                                                             status_id=status.id))
-        except tweepy.TweepError as e:
-            log.error("Twitter.tweet: {}".format(repr(e)))
-            irc.reply(u"Das hat nicht geklappt.")
-
-    def tweet(self, irc, msg, args, text):
-        """<text>
-
-        Tweets <text>
-        """
-
-        self._tweet(irc, text)
-
-    tweet = wrap(tweet, ["text"])
-
-    def reply(self, irc, msg, args, tweet, text):
-        """<tweet url or id> <text>
-
-        Tweets <text> as reply to <tweet url or id>
-        """
-
-        self._tweet(irc, text, tweet)
-
-    reply = wrap(reply, ["somethingWithoutSpaces", "text"])
-
-    def fav(self, irc, msg, args, tweet):
-        """<tweet url or id>
-
-        Favs tweet <tweet url or id>
-        """
-
-        status_id = self._get_status_id(tweet)
-        if status_id:
-            try:
-                api = self._get_twitter_api()
-                api.create_favorite(status_id)
-                irc.reply(u"Alles klar.")
-            except tweepy.TweepError as e:
-                log.error("Twitter.fav: {}".format(repr(e)))
-                irc.reply(u"Das hat nicht geklappt.")
-
-    fav = wrap(fav, ["somethingWithoutSpaces"])
-
-    def rt(self, irc, msg, args, tweet):
-        """<tweet url or id>
-
-        RTs tweet <tweet url or id>
-        """
-        status_id = self._get_status_id(tweet)
-        if status_id:
-            try:
-                api = self._get_twitter_api()
-                api.retweet(status_id)
-                irc.reply(u"Alles klar.")
-            except tweepy.TweepError as e:
-                log.error("Twitter.rt: {}".format(repr(e)))
-                irc.reply(u"Das hat nicht geklappt.")
-
-    rt = wrap(rt, ['somethingWithoutSpaces'])
-
-    def doPrivmsg(self, irc, msg):
-        if ircmsgs.isCtcp(msg) and not ircmsgs.isAction(msg):
-            return
-        if ircutils.isChannel(msg.args[0]) and self.registryValue('resolve', msg.args[0]):
-            if msg.args[1].find("twitter") != -1:
-                status_id = self._get_status_id(msg.args[1], search=True)
-                if status_id:
-                    try:
-                        api = self._get_twitter_api()
-                        tweet = api.get_status(status_id)
-                        text = tweet.text.replace("\n", " ")
-                        text = HTMLParser.HTMLParser().unescape(text)
-                        message = u"Tweet von @{}: {}".format(tweet.user.screen_name, text)
-                        message = ircutils.safeArgument(message)
-                        irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
-                    except tweepy.TweepError as e:
-                        log.error("Twitter.doPrivmsg: {}".format(repr(e)))
-                        return
+    def _is_bot_enabled(self, irc=None):
+        if self.registryValue("botEnabled", msg.args[0]):
+            return True
+        if irc:
+            irc.reply("Dieser Kanal hat keinen Twitter Account.")
+        return False
 
     def _get_twitter_api(self):
         auth = tweepy.OAuthHandler(self.registryValue("consumerKey"),
@@ -176,6 +77,129 @@ class Twitter(callbacks.Plugin):
             return m.group("status_id")
         else:
             return False
+
+    def _tweet(self, irc, msg, text, tweet=None):
+        if not self._is_bot_enabled(irc):
+            return
+        try:
+            api = self._get_twitter_api()
+            if tweet:
+                status_id = self._get_status_id(tweet)
+                if status_id:
+                    if not text.startswith("@"):
+                        username = api.get_status(status_id).user.screen_name
+                        text = "@{} {}".format(username, text)
+                    message = utils.str.ellipsisify(text, 140)
+                    status = api.update_status(status=message, in_reply_to_status_id=status_id)
+                else:
+                    irc.reply("Du musst mir schon einen Tweet geben, auf den sich der Unsinn beziehen soll.")
+                    return
+            else:
+                message = utils.str.ellipsisify(text, 140)
+                status = api.update_status(status=message)
+            irc.reply("https://twitter.com/{bot}/status/{status_id}".format(
+                bot=self.registryValue("botNick", msg.args[0]), status_id=status.id))
+        except tweepy.TweepError as e:
+            log.error("Twitter.tweet: {}".format(repr(e)))
+            irc.reply("Das hat nicht geklappt.")
+
+    def twitter(self, irc, msg, args):
+        """Returns the link to the bot's Twitter profile."""
+        if self.registryValue("botEnabled", msg.args[0]):
+            irc.reply("http://twitter.com/{}".format(self.registryValue("botNick", msg.args[0])))
+        else:
+            irc.reply("Dieser Kanal hat keinen Twitter Account.")
+
+    def tweet(self, irc, msg, args, text):
+        """<text>
+
+        Tweets <text>
+        """
+        self._tweet(irc, msg, text)
+
+    def reply(self, irc, msg, args, tweet, text):
+        """<tweet url or id> <text>
+
+        Tweets <text> as reply to <tweet url or id>
+        """
+        self._tweet(irc, msg, text, tweet)
+
+    def fav(self, irc, msg, args, tweet):
+        """<tweet url or id>
+
+        Favs tweet <tweet url or id>
+        """
+        if not self._is_bot_enabled(irc):
+            return
+        status_id = self._get_status_id(tweet)
+        if status_id:
+            try:
+                api = self._get_twitter_api()
+                api.create_favorite(status_id)
+                irc.reply("Alles klar.")
+            except tweepy.TweepError as e:
+                log.error("Twitter.fav: {}".format(repr(e)))
+                irc.reply("Das hat nicht geklappt.")
+
+    def rt(self, irc, msg, args, tweet):
+        """<tweet url or id>
+
+        RTs tweet <tweet url or id>
+        """
+        if not self._is_bot_enabled(irc):
+            return
+        status_id = self._get_status_id(tweet)
+        if status_id:
+            try:
+                api = self._get_twitter_api()
+                api.retweet(status_id)
+                irc.reply("Alles klar.")
+            except tweepy.TweepError as e:
+                log.error("Twitter.rt: {}".format(repr(e)))
+                irc.reply("Das hat nicht geklappt.")
+
+    def delete(self, irc, msg, args, tweet):
+        """<tweet url or id>
+
+        Deletes tweet <tweet url or id>
+        """
+        if not self._is_bot_enabled(irc):
+            return
+        status_id = self._get_status_id(tweet)
+        if status_id:
+            try:
+                api = self._get_twitter_api()
+                api.destroy_status(status_id)
+                irc.reply("Alles klar.")
+            except tweepy.TweepError as e:
+                log.error("Twitter.delete: {}".format(repr(e)))
+                irc.reply("Das hat nicht geklappt.")
+
+    def doPrivmsg(self, irc, msg):
+        if ircmsgs.isCtcp(msg) and not ircmsgs.isAction(msg):
+            return
+        if ircutils.isChannel(msg.args[0]) and self.registryValue("resolve", msg.args[0]):
+            if msg.args[1].find("twitter") != -1:
+                status_id = self._get_status_id(msg.args[1], search=True)
+                if status_id:
+                    try:
+                        api = self._get_twitter_api()
+                        tweet = api.get_status(status_id)
+                        text = tweet.text.replace("\n", " ")
+                        text = HTMLParser.HTMLParser().unescape(text)
+                        message = "Tweet von @{}: {}".format(tweet.user.screen_name, text)
+                        message = ircutils.safeArgument(message)
+                        irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
+                    except tweepy.TweepError as e:
+                        log.error("Twitter.doPrivmsg: {}".format(repr(e)))
+                        return
+
+    twitter = wrap(twitter, ["public"])
+    tweet = wrap(tweet, ["public", "text"])
+    reply = wrap(reply, ["public", "somethingWithoutSpaces", "text"])
+    fav = wrap(fav, ["public", "somethingWithoutSpaces"])
+    rt = wrap(rt, ["public", "somethingWithoutSpaces"])
+    delete = wrap(delete, ["public", "somethingWithoutSpaces"])
 
 
 Class = Twitter

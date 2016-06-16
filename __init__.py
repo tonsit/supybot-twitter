@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2010-2015, buckket
+# Copyright (c) 2010-2016, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@ __author__ = supybot.Author("buckket", "buckket", "buckket@cock.li")
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/buckket/supybot-twitter' # 'http://supybot.com/Members/yourname/Twitter/download'
+__url__ = "https://github.com/buckket/supybot-twitter"
 
 import config
 import plugin

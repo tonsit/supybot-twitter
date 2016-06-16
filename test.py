@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2010-2015, buckket
+# Copyright (c) 2010-2016, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,4 +31,4 @@
 from supybot.test import *
 
 class TwitterTestCase(PluginTestCase):
-    plugins = ('Twitter',)
+    plugins = ("Twitter",)

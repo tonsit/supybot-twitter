@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2010-2015, buckket
+# Copyright (c) 2010-2016, buckket
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,29 +31,32 @@
 import supybot.conf as conf
 import supybot.registry as registry
 
+
 def configure(advanced):
     # This will be called by supybot to configure this module.  advanced is
     # a bool that specifies whether the user identified himself as an advanced
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Twitter', True)
+    conf.registerPlugin("Twitter", True)
 
 
-Twitter = conf.registerPlugin('Twitter')
+Twitter = conf.registerPlugin("Twitter")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(Twitter, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
 
-conf.registerChannelValue(Twitter, 'resolve',
+conf.registerChannelValue(Twitter, "resolve",
     registry.Boolean(True, """Resolve Twitter links on this channel"""))
-conf.registerGlobalValue(Twitter, 'consumerKey',
-    registry.String('', """Twitter OAuth conusmer_key""", private=True))
-conf.registerGlobalValue(Twitter, 'consumerSecret',
-    registry.String('', """Twitter OAuth conusmer_secret""", private=True))
-conf.registerGlobalValue(Twitter, 'accessKey',
-    registry.String('', """Twitter OAuth access_key""", private=True))
-conf.registerGlobalValue(Twitter, 'accessSecret',
-    registry.String('', """Twitter OAuth access_secret""", private=True))
-conf.registerGlobalValue(Twitter, 'botNick',
-    registry.String('', """Twitter screen_name"""))
+conf.registerChannelValue(Twitter, "consumerKey",
+    registry.String("", """Twitter OAuth conusmer_key""", private=True))
+conf.registerChannelValue(Twitter, "consumerSecret",
+    registry.String("", """Twitter OAuth conusmer_secret""", private=True))
+conf.registerChannelValue(Twitter, "accessKey",
+    registry.String("", """Twitter OAuth access_key""", private=True))
+conf.registerChannelValue(Twitter, "accessSecret",
+    registry.String("", """Twitter OAuth access_secret""", private=True))
+conf.registerChannelValue(Twitter, "botNick",
+    registry.String("", """Twitter screen_name"""))
+conf.registerChannelValue(Twitter, "botEnabled",
+    registry.Boolean(False, """Enable Twitter bot for thois channel"""))
