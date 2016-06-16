@@ -53,7 +53,7 @@ class Twitter(callbacks.Plugin):
         self.regexp = re.compile(
             r"(?:https?://(?:[^.]+.)?twitter.com/(?P<username>[^/]*)/status(?:es)?/)?(?P<status_id>\d+)")
 
-    def _is_bot_enabled(self, irc=None):
+    def _is_bot_enabled(self, msg, irc=None):
         if self.registryValue("botEnabled", msg.args[0]):
             return True
         if irc:
@@ -79,7 +79,7 @@ class Twitter(callbacks.Plugin):
             return False
 
     def _tweet(self, irc, msg, text, tweet=None):
-        if not self._is_bot_enabled(irc):
+        if not self._is_bot_enabled(msg, irc):
             return
         try:
             api = self._get_twitter_api()
@@ -129,7 +129,7 @@ class Twitter(callbacks.Plugin):
 
         Favs tweet <tweet url or id>
         """
-        if not self._is_bot_enabled(irc):
+        if not self._is_bot_enabled(msg, irc):
             return
         status_id = self._get_status_id(tweet)
         if status_id:
@@ -146,7 +146,7 @@ class Twitter(callbacks.Plugin):
 
         RTs tweet <tweet url or id>
         """
-        if not self._is_bot_enabled(irc):
+        if not self._is_bot_enabled(msg, irc):
             return
         status_id = self._get_status_id(tweet)
         if status_id:
@@ -163,7 +163,7 @@ class Twitter(callbacks.Plugin):
 
         Deletes tweet <tweet url or id>
         """
-        if not self._is_bot_enabled(irc):
+        if not self._is_bot_enabled(msg, irc):
             return
         status_id = self._get_status_id(tweet)
         if status_id:
