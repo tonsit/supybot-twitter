@@ -60,11 +60,11 @@ class Twitter(callbacks.Plugin):
             irc.reply("Dieser Kanal hat keinen Twitter Account.")
         return False
 
-    def _get_twitter_api(self):
-        auth = tweepy.OAuthHandler(self.registryValue("consumerKey"),
-                                   self.registryValue("consumerSecret"))
-        auth.set_access_token(self.registryValue("accessKey"),
-                              self.registryValue("accessSecret"))
+    def _get_twitter_api(self, msg):
+        auth = tweepy.OAuthHandler(self.registryValue("consumerKey", msg.args[0]),
+                                   self.registryValue("consumerSecret", msg.args[0]))
+        auth.set_access_token(self.registryValue("accessKey", msg.args[0]),
+                              self.registryValue("accessSecret", msg.args[0]))
         return tweepy.API(auth)
 
     def _get_status_id(self, tweet, search=False):
@@ -82,7 +82,7 @@ class Twitter(callbacks.Plugin):
         if not self._is_bot_enabled(msg, irc):
             return
         try:
-            api = self._get_twitter_api()
+            api = self._get_twitter_api(msg)
             if tweet:
                 status_id = self._get_status_id(tweet)
                 if status_id:
@@ -134,7 +134,7 @@ class Twitter(callbacks.Plugin):
         status_id = self._get_status_id(tweet)
         if status_id:
             try:
-                api = self._get_twitter_api()
+                api = self._get_twitter_api(msg)
                 api.create_favorite(status_id)
                 irc.reply("Alles klar.")
             except tweepy.TweepError as e:
@@ -151,7 +151,7 @@ class Twitter(callbacks.Plugin):
         status_id = self._get_status_id(tweet)
         if status_id:
             try:
-                api = self._get_twitter_api()
+                api = self._get_twitter_api(msg)
                 api.retweet(status_id)
                 irc.reply("Alles klar.")
             except tweepy.TweepError as e:
@@ -168,7 +168,7 @@ class Twitter(callbacks.Plugin):
         status_id = self._get_status_id(tweet)
         if status_id:
             try:
-                api = self._get_twitter_api()
+                api = self._get_twitter_api(msg)
                 api.destroy_status(status_id)
                 irc.reply("Alles klar.")
             except tweepy.TweepError as e:
@@ -183,7 +183,7 @@ class Twitter(callbacks.Plugin):
                 status_id = self._get_status_id(msg.args[1], search=True)
                 if status_id:
                     try:
-                        api = self._get_twitter_api()
+                        api = self._get_twitter_api(msg)
                         tweet = api.get_status(status_id)
                         text = tweet.text.replace("\n", " ")
                         text = HTMLParser.HTMLParser().unescape(text)
