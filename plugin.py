@@ -50,8 +50,7 @@ class Twitter(callbacks.Plugin):
         self.__parent = super(Twitter, self)
         self.__parent.__init__(irc)
 
-        self.regexp = re.compile(
-            r"(?:https?://(?:[^.]+.)?twitter.com/(?P<username>[^/]*)/status(?:es)?/)?(?P<status_id>\d+)")
+        self.regexp = re.compile(r"(?:https?://(?:[^.]+.)?twitter.com/(?P<username>[^/]*)/status(?:es)?/)?(?P<status_id>\d+)")
 
     def _is_bot_enabled(self, msg, irc=None):
         if self.registryValue("botEnabled", msg.args[0]):
@@ -188,8 +187,8 @@ class Twitter(callbacks.Plugin):
                         text = tweet.text.replace("\n", " ")
                         text = HTMLParser.HTMLParser().unescape(text)
                         message = "Tweet von @{}: {}".format(tweet.user.screen_name, text)
-                        message = ircutils.safeArgument(message)
-                        irc.queueMsg(ircmsgs.privmsg(msg.args[0], message))
+                        message = ircutils.safeArgument(message.encode('utf-8'))
+                        irc.queueMsg(ircmsgs.notice(msg.args[0], message))
                     except tweepy.TweepError as e:
                         log.error("Twitter.doPrivmsg: {}".format(repr(e)))
                         return
