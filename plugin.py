@@ -186,7 +186,7 @@ class Twitter(callbacks.Plugin):
                         tweet = api.get_status(status_id)
                         text = tweet.text.replace("\n", " ")
                         text = HTMLParser.HTMLParser().unescape(text)
-                        message = "Tweet von @{}: {}".format(tweet.user.screen_name, text)
+                        message = u"Tweet von @{}: {}".format(tweet.user.screen_name, text)
                         message = ircutils.safeArgument(message.encode('utf-8'))
                         irc.queueMsg(ircmsgs.notice(msg.args[0], message))
                     except tweepy.TweepError as e:
